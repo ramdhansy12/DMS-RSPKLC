@@ -33,8 +33,9 @@ class Document extends Model
     }
 
     // 4️⃣ Versi TERBARU (HELPER)
-    public function latestVersion()
+    public function currentVersion()
     {
-        return $this->hasOne(DocumentVersion::class)->latestOfMany();
+        return $this->belongsTo(DocumentVersion::class, 'current_version');
     }
+
 }
