@@ -14,18 +14,8 @@ Route::get('/', function () {
 |--------------------------------------------------------------------------
 */
 Route::get('/dashboard', function () {
-    return redirect()->route('documents.index'); // langsung ke dokumen
+    return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
-
-/*
-|--------------------------------------------------------------------------
-| PUBLIC PREVIEW (KHUSUS GOOGLE VIEWER)
-|--------------------------------------------------------------------------
-*/
-Route::get(
-    '/documents/version/{version}/public-preview',
-    [DocumentController::class, 'publicPreview']
-)->name('documents.publicPreview');
 
 /*
 |--------------------------------------------------------------------------
@@ -39,25 +29,34 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    // Dokumen
+    // Dokumen (lihat & upload)
     Route::resource('documents', DocumentController::class)
         ->only(['index','create','store','show','edit']);
 
+    // Download versi dokumen
     Route::get(
         '/documents/version/{id}/download',
         [DocumentController::class, 'download']
     )->name('documents.download');
 
-    Route::get(
-        '/documents/version/{id}/preview',
-        [DocumentController::class, 'preview']
-    )->name('documents.preview');
-
+    // Revisi dokumen (tambah versi)
     Route::post(
         '/documents/{document}/revisi',
         [DocumentController::class, 'addVersion']
     )->name('documents.revisi');
+
+    Route::get(
+    '/documents/version/{id}/preview',
+    [DocumentController::class, 'preview']
+    )->name('documents.preview');
+
+    Route::get('/documents/{version}/public-preview',
+    [DocumentController::class, 'publicPreview'])
+    ->name('documents.publicPreview');
+
+
 });
+
 
 /*
 |--------------------------------------------------------------------------
@@ -65,8 +64,13 @@ Route::middleware('auth')->group(function () {
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth','role:admin'])->group(function () {
+
     Route::resource('documents', DocumentController::class)
-        ->only(['update','destroy']);
+        ->only(['edit','update','destroy']);
+
+    Route::get('/admin', function () {
+        return 'ADMIN AREA LARAVEL 12';
+    });
 });
 
 require __DIR__.'/auth.php';

@@ -35,7 +35,9 @@ class Document extends Model
     // 4️⃣ Versi TERBARU (HELPER)
     public function currentVersion()
     {
-        return $this->belongsTo(DocumentVersion::class, 'current_version');
+        return $this->hasOne(DocumentVersion::class)
+            ->where('version', $this->current_version);
     }
+
 
 }
