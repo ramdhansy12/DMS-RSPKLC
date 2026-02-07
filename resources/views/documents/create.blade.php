@@ -41,11 +41,32 @@
                         </select>
                     </div>
                 </div>
-
                 <div class="row mb-3">
                     <label class="col-md-3 col-form-label">Unit</label>
                     <div class="col-md-9">
-                        <input type="text" name="unit" class="form-control" required>
+                        <select name="unit" class="form-select" required>
+                            <option value="">-- Pilih Unit --</option>
+                            <option value="IT">IT</option>
+                            <option value="QA">QA</option>
+                            <option value="HRD">HRD</option>
+                            <option value="PPI">PPI</option>
+                            <option value="REKAM MEDIS">REKAM MEDIS</option>
+                            <option value="KEPERAWATAN">KEPERAWATAN</option>
+                            <option value="RAWAT INAP">RAWAT INAP</option>
+                            <option value="RAWAT JALAN">RAWAT JALAN</option>
+                            <option value="CASEMIX">CASEMIX</option>
+                            <option value="RADIOLOGI">RADIOLOGI</option>
+                            <option value="LABORATORIUM">LABORATORIUM</option>
+                            <option value="FARMASI">FARMASI</option>
+                            <option value="PURCASHING">PURCASHING</option>
+                            <option value="LOGUM">LOGUM</option>
+                            <option value="LOGMED">LOGMED</option>
+                            <option value="KEUANGAN">KEUANGAN</option>
+                            <option value="MCU">MEDICAL CHECK UP</option>
+                            <option value="UMUM">UMUM</option>
+                            <option value="OK">OK</option>
+                            <option value="IGD">IGD</option>
+                        </select>
                     </div>
                 </div>
 

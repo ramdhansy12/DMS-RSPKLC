@@ -33,9 +33,66 @@
                             <!-- Field Unit -->
                             <div class="mb-3">
                                 <label for="unit" class="form-label">Unit / Bagian</label>
-                                <input type="text" class="form-control @error('unit') is-invalid @enderror"
-                                    id="unit" name="unit" value="{{ old('unit', $document->unit) }}"
-                                    placeholder="Contoh: Keperawatan, Farmasi, dll." required>
+                                <select name="unit" id="unit"
+                                    class="form-select @error('unit') is-invalid @enderror">
+                                    <option value="">-- Pilih Unit --</option>
+                                    <option value="UMUM" {{ old('unit', $document->unit) == 'UMUM' ? 'selected' : '' }}>
+                                        UMUM</option>
+                                    <option value="IT" {{ old('unit', $document->unit) == 'IT' ? 'selected' : '' }}>IT
+                                    </option>
+                                    <option value="QA" {{ old('unit', $document->unit) == 'QA' ? 'selected' : '' }}>QA
+                                    </option>
+                                    <option value="HRD" {{ old('unit', $document->unit) == 'HRD' ? 'selected' : '' }}>HRD
+                                    </option>
+                                    <option value="PPI" {{ old('unit', $document->unit) == 'PPI' ? 'selected' : '' }}>PPI
+                                    </option>
+                                    <option value="REKAM MEDIS"
+                                        {{ old('unit', $document->unit) == 'REKAM MEDIS' ? 'selected' : '' }}>REKAM MEDIS
+                                    </option>
+                                    <option value="IGD" {{ old('unit', $document->unit) == 'IGD' ? 'selected' : '' }}>IGD
+                                    </option>
+                                    <option value="OK" {{ old('unit', $document->unit) == 'OK' ? 'selected' : '' }}>OK
+                                    </option>
+                                    <option value="KEPERAWATAN"
+                                        {{ old('unit', $document->unit) == 'KEPERAWATAN' ? 'selected' : '' }}>KEPERAWATAN
+                                    </option>
+                                    <option value="RAWAT INAP"
+                                        {{ old('unit', $document->unit) == 'RAWAT INAP' ? 'selected' : '' }}>RAWAT INAP
+                                    </option>
+                                    <option value="RAWAT JALAN"
+                                        {{ old('unit', $document->unit) == 'RAWAT JALAN' ? 'selected' : '' }}>RAWAT JALAN
+                                    </option>
+                                    <option value="CASEMIX"
+                                        {{ old('unit', $document->unit) == 'CASEMIX' ? 'selected' : '' }}>CASEMIX</option>
+                                    <option value="RADIOLOGI"
+                                        {{ old('unit', $document->unit) == 'RADIOLOGI' ? 'selected' : '' }}>RADIOLOGI
+                                    </option>
+                                    <option value="LABORATORIUM"
+                                        {{ old('unit', $document->unit) == 'LABORATORIUM' ? 'selected' : '' }}>LABORATORIUM
+                                    </option>
+                                    <option value="FARMASI"
+                                        {{ old('unit', $document->unit) == 'FARMASI' ? 'selected' : '' }}>FARMASI</option>
+                                    <option value="PURCASHING"
+                                        {{ old('unit', $document->unit) == 'PURCASHING' ? 'selected' : '' }}>PURCASHING
+                                    </option>
+                                    <option value="LOGUM" {{ old('unit', $document->unit) == 'LOGUM' ? 'selected' : '' }}>
+                                        LOGUM</option>
+                                    <option value="LOGMED"
+                                        {{ old('unit', $document->unit) == 'LOGMED' ? 'selected' : '' }}>LOGMED</option>
+                                    <option value="KEUANGAN"
+                                        {{ old('unit', $document->unit) == 'KEUANGAN' ? 'selected' : '' }}>KEUANGAN
+                                    </option>
+                                    <option value="MCU" {{ old('unit', $document->unit) == 'MCU' ? 'selected' : '' }}>
+                                        MEDICAL CHECK UP</option>
+                                    <option value="PERINA"
+                                        {{ old('unit', $document->unit) == 'PERINA' ? 'selected' : '' }}>
+                                        PERINA</option>
+                                    <option value="VK" {{ old('unit', $document->unit) == 'VK' ? 'selected' : '' }}>VK
+                                    </option>
+                                    <option value="ICU" {{ old('unit', $document->unit) == 'ICU' ? 'selected' : '' }}>
+                                        ICU/HCU</option>
+
+                                </select>
                                 @error('unit')
                                     <div class="invalid-feedback">
                                         {{ $message }}

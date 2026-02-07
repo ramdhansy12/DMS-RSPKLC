@@ -23,9 +23,16 @@
                     <p><strong>Status:</strong>
                         <span class="badge bg-success">{{ $document->status }}</span>
                     </p>
-                    <p><strong>Versi Aktif:</strong>
-                        {{ $document->currentVersion->version ?? '-' }}
+                    <p>
+                        <strong>Versi Aktif:</strong>
+                        <span id="infoVersion">
+                            {{ $document->currentVersion->version ?? '-' }}
+                        </span>
                     </p>
+
+                    {{-- <p><strong>Versi Aktif:</strong>
+                        {{ $document->currentVersion->version ?? '-' }}
+                    </p> --}}
                 </div>
             </div>
 
@@ -56,11 +63,18 @@
 
                                 <div class="btn-group">
                                     {{-- PREVIEW TANPA TAB BARU --}}
-                                    <a href="{{ route('documents.preview', $v->id) }}"
+                                    {{-- <a href="{{ route('documents.preview', $v->id) }}"
                                         class="btn btn-sm btn-outline-primary btn-preview"
                                         data-url="{{ route('documents.preview', $v->id) }}">
                                         Preview
+                                    </a> --}}
+                                    <a href="{{ route('documents.preview', $v->id) }}"
+                                        class="btn btn-sm btn-outline-primary btn-preview"
+                                        data-url="{{ route('documents.preview', $v->id) }}"
+                                        data-version="{{ $v->version }}" data-id="{{ $v->id }}">
+                                        Preview
                                     </a>
+
 
 
                                     {{-- DOWNLOAD TETAP --}}
@@ -103,26 +117,13 @@
         </div>
     </div>
 @endsection
-
 @push('scripts')
     <script>
         document.addEventListener('DOMContentLoaded', function() {
 
-            const searchInput = document.getElementById('searchVersion');
-            const items = document.querySelectorAll('.version-item');
             const iframe = document.getElementById('docPreview');
+            const infoVersion = document.getElementById('infoVersion');
 
-            // SEARCH
-            searchInput.addEventListener('input', function() {
-                const keyword = this.value.toLowerCase();
-
-                items.forEach(item => {
-                    const version = item.dataset.version;
-                    item.style.display = version.includes(keyword) ? '' : 'none';
-                });
-            });
-
-            // PREVIEW TANPA PINDAH HALAMAN
             document.querySelectorAll('.btn-preview').forEach(btn => {
                 btn.addEventListener('click', function(e) {
                     e.preventDefault();
@@ -130,7 +131,36 @@
                     if (!iframe) return;
 
                     const url = this.dataset.url;
-                    iframe.src = url + '?t=' + Date.now(); // anti-cache
+                    const version = this.dataset.version;
+                    const versionId = this.dataset.id;
+
+                    // 1️⃣ GANTI IFRAME
+                    iframe.src = url + '?t=' + Date.now();
+
+                    // 2️⃣ UPDATE INFO DOKUMEN
+                    if (infoVersion) {
+                        infoVersion.textContent = version;
+                    }
+
+                    // 3️⃣ PINDAHKAN BADGE AKTIF
+                    document.querySelectorAll('.list-group-item').forEach(item => {
+                        item.classList.remove('bg-light');
+                        const badge = item.querySelector('.badge.bg-primary');
+                        if (badge) badge.remove();
+                    });
+
+                    const parentItem = this.closest('.list-group-item');
+                    if (parentItem) {
+                        parentItem.classList.add('bg-light');
+
+                        const title = parentItem.querySelector('.fw-semibold');
+                        if (title) {
+                            const badge = document.createElement('span');
+                            badge.className = 'badge bg-primary ms-2';
+                            badge.textContent = 'Aktif';
+                            title.appendChild(badge);
+                        }
+                    }
                 });
             });
 

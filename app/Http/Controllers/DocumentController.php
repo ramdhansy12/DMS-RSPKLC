@@ -6,13 +6,46 @@ use App\Models\Document;
 use App\Models\DocumentVersion;
 use Illuminate\Http\Request;
 
+
 class DocumentController extends Controller
 {
-    public function index()
-    {
-        $documents = Document::with('creator')->latest()->get();
-        return view('documents.index', compact('documents'));
+
+public function index(Request $request)
+{
+    $query = Document::with('creator');
+
+    // SEARCH berdasarkan judul dokumen
+    if ($request->filled('search')) {
+        $query->where('title', 'like', '%' . $request->search . '%');
     }
+
+    // FILTER berdasarkan unit
+    if ($request->filled('unit')) {
+        $query->where('unit', $request->unit);
+    }
+
+    $documents = $query->latest()->get();
+
+    // Ambil daftar unit (unik)
+    $units = Document::select('unit')
+        ->distinct()
+        ->orderBy('unit')
+        ->pluck('unit');
+
+            // ⏩ PAGINATION
+    $documents = $query
+        ->latest()
+        ->paginate(10)          // jumlah per halaman
+        ->withQueryString();    // jaga parameter search & filte
+
+    return view('documents.index', compact('documents', 'units'));
+}
+
+    // public function index()
+    // {
+    //     $documents = Document::with('creator')->latest()->get();
+    //     return view('documents.index', compact('documents'));
+    // }
 
     public function create()
     {
@@ -35,6 +68,7 @@ class DocumentController extends Controller
             'category' => $request->category,
             'unit' => $request->unit,
             'status' => 'AKTIF',
+            'current_version' => 1,
             'created_by' => auth()->id(),
         ]);
 
