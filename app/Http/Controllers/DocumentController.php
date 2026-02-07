@@ -1,20 +1,16 @@
 <?php
 
 namespace App\Http\Controllers;
+
 use App\Models\Document;
 use App\Models\DocumentVersion;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
-
 
 class DocumentController extends Controller
 {
     public function index()
     {
-        $documents = Document::with('creator')
-            ->latest()
-            ->get();
-
+        $documents = Document::with('creator')->latest()->get();
         return view('documents.index', compact('documents'));
     }
 
@@ -23,299 +19,168 @@ class DocumentController extends Controller
         return view('documents.create');
     }
 
-//     public function store(Request $request)
-// {
-//     $request->validate([
-//         'title' => 'required',
-//         'document_number' => 'required|unique:documents',
-//         'category' => 'required',
-//         'unit' => 'required',
-//         'file' => 'required|mimes:pdf,doc,docx|max:10240',
-//     ]);
+    public function store(Request $request)
+    {
+        $request->validate([
+            'title' => 'required',
+            'document_number' => 'required|unique:documents',
+            'category' => 'required',
+            'unit' => 'required',
+            'file' => 'required|mimes:pdf,doc,docx|max:10240',
+        ]);
 
-//     // 1. Simpan dokumen (metadata)
-//     $document = Document::create([
-//         'title' => $request->title,
-//         'document_number' => $request->document_number,
-//         'category' => $request->category,
-//         'unit' => $request->unit,
-//         'status' => 'AKTIF',
-//         'created_by' => auth()->id(),
-//         'current_version' => '1.0',
-//     ]);
+        $document = Document::create([
+            'title' => $request->title,
+            'document_number' => $request->document_number,
+            'category' => $request->category,
+            'unit' => $request->unit,
+            'status' => 'AKTIF',
+            'created_by' => auth()->id(),
+        ]);
 
-//     // 2. Simpan file
-//     $path = $request->file('file')->store('documents');
-
-//     // 3. Simpan versi pertama
-//     DocumentVersion::create([
-//         'document_id' => $document->id,
-//         'version' => '1.0',
-//         'file_path' => $path,
-//         'uploaded_by' => auth()->id(),
-//     ]);
-
-//     return redirect()->route('documents.index')
-//         ->with('success', 'Dokumen berhasil ditambahkan');
-// }
-
-public function publicPreview(DocumentVersion $version)
-{
-    $path = storage_path('app/private/' . $version->file_path);
-
-    abort_if(!file_exists($path), 404);
-
-    return response()->file($path);
-}
-
-
-public function store(Request $request)
-{
-    $request->validate([
-        'title' => 'required',
-        'document_number' => 'required|unique:documents',
-        'category' => 'required',
-        'unit' => 'required',
-        'file' => 'required|mimes:pdf,doc,docx|max:10240',
-    ]);
-
-    $document = Document::create([
-        'title' => $request->title,
-        'document_number' => $request->document_number,
-        'category' => $request->category,
-        'unit' => $request->unit,
-        'status' => 'AKTIF',
-        'created_by' => auth()->id(),
-        'current_version' => '1.0',
-    ]);
-
-    // SIMPAN FILE KE PUBLIC
-    // $path = $request->file('file')->store('documents', 'public');
-    // SIMPAN FILE KE PRIVATE
-    $path = $request->file('file')->store('documents', 'private');
-
-    // BUAT VERSI PERTAMA
-    $version = DocumentVersion::create([
-        'document_id' => $document->id,
-        'version' => '1.0',
-        'file_path' => $path,
-        'uploaded_by' => auth()->id(),
-    ]);
-
-    // SET VERSI AKTIF (PAKAI ID)
-    $document->update([
-        'current_version' => $version->id,
-    ]);
-
-    return redirect()->route('documents.index')
-        ->with('success', 'Dokumen berhasil ditambahkan');
-}
-
-    public function show(Document $document)
-{
-    $document->load(['creator', 'versions.uploader']);
-
-    return view('documents.show', compact('document'));
-}
-
-public function edit(Document $document)
-{
-    return view('documents.edit', compact('document'));
-}
-
-
-public function update(Request $request, Document $document)
-{
-    $request->validate([
-        'title' => 'required',
-        'unit' => 'required',
-        'status' => 'required',
-        'file' => 'nullable|mimes:pdf,doc,docx|max:10240',
-    ]);
-
-    // 1️⃣ Update metadata dokumen
-    $document->update([
-        'title' => $request->title,
-        'unit' => $request->unit,
-        'status' => $request->status,
-    ]);
-
-    // 2️⃣ JIKA ADA FILE BARU → BUAT VERSI BARU
-    if ($request->hasFile('file')) {
-
-        // Hitung versi berikutnya
-        $latestVersion = $document->versions()->count() + 1;
-        $newVersion = '1.' . $latestVersion;
-
-        // Simpan file ke PRIVATE storage
         $path = $request->file('file')->store('documents', 'private');
 
-        // Simpan versi baru
-        DocumentVersion::create([
+        $version = DocumentVersion::create([
             'document_id' => $document->id,
-            'version' => $newVersion,
+            'version' => '1.0',
             'file_path' => $path,
-            'notes' => 'Revisi melalui edit dokumen',
             'uploaded_by' => auth()->id(),
         ]);
 
-        // Update versi aktif
+        // 🔥 SET VERSI AKTIF PAKAI ID
         $document->update([
-            'current_version' => $newVersion,
+            'current_version' => $version->id,
+        ]);
+
+
+
+        return redirect()
+            ->route('documents.show', $document->id)
+            ->with('success', 'Dokumen berhasil ditambahkan');
+    }
+
+    public function edit(Document $document)
+    {
+        return view('documents.edit', compact('document'));
+    }
+
+    public function show(Document $document)
+    {
+        $document->load([
+            'creator',
+            'versions.uploader',
+            'currentVersion'
+        ]);
+
+        return view('documents.show', compact('document'));
+    }
+
+    public function update(Request $request, Document $document)
+    {
+        $request->validate([
+            'title' => 'required',
+            'unit' => 'required',
+            'status' => 'required',
+            'file' => 'nullable|mimes:pdf,doc,docx|max:10240',
+        ]);
+
+        $document->update([
+            'title' => $request->title,
+            'unit' => $request->unit,
+            'status' => $request->status,
+        ]);
+
+        if ($request->hasFile('file')) {
+
+            $next = $document->versions()->count();
+            $versionLabel = '1.' . $next;
+
+            $path = $request->file('file')->store('documents', 'private');
+
+            $version = DocumentVersion::create([
+                'document_id' => $document->id,
+                'version' => $versionLabel,
+                'file_path' => $path,
+                'notes' => 'Revisi dokumen',
+                'uploaded_by' => auth()->id(),
+            ]);
+
+            // 🔥 UPDATE VERSI AKTIF
+            $document->update([
+                'current_version' => $version->id,
+            ]);
+        }
+
+        return redirect()
+            ->route('documents.show', $document->id)
+            ->with('success', 'Dokumen berhasil diperbarui');
+    }
+
+    public function addVersion(Request $request, Document $document)
+    {
+        $request->validate([
+            'file' => 'required|mimes:pdf,doc,docx|max:10240',
+        ]);
+
+        $next = $document->versions()->count();
+        $versionLabel = '1.' . $next;
+
+        $path = $request->file('file')->store('documents', 'private');
+
+        $version = DocumentVersion::create([
+            'document_id' => $document->id,
+            'version' => $versionLabel,
+            'file_path' => $path,
+            'notes' => $request->notes,
+            'uploaded_by' => auth()->id(),
+        ]);
+
+        $document->update([
+            'current_version' => $version->id,
+        ]);
+
+        return back()->with('success', 'Versi baru berhasil diupload');
+    }
+
+    public function preview($id)
+    {
+        $version = DocumentVersion::findOrFail($id);
+
+        $path = storage_path('app/private/' . $version->file_path);
+
+        abort_if(!file_exists($path), 404);
+
+        return response()->file($path, [
+            'Content-Type' => mime_content_type($path),
+            'Content-Disposition' => 'inline',
         ]);
     }
 
-    return redirect()
-        ->route('documents.show', $document->id)
-        ->with('success', 'Dokumen berhasil diperbarui');
-}
+    public function download($id)
+    {
+        $version = DocumentVersion::findOrFail($id);
 
+        $path = storage_path('app/private/' . $version->file_path);
 
+        abort_if(!file_exists($path), 404);
 
-// public function addVersion(Request $request, Document $document)
-// {
-//     $request->validate([
-//         'file' => 'required|mimes:pdf,doc,docx|max:10240',
-//     ]);
-
-//     $latestVersion = $document->versions()->count();
-//     $newVersion = '1.' . $latestVersion;
-
-//     $path = $request->file('file')->store('documents');
-
-//     DocumentVersion::create([
-//         'document_id' => $document->id,
-//         'version' => $newVersion,
-//         'file_path' => $path,
-//         'notes' => $request->notes,
-//         'uploaded_by' => auth()->id(),
-//     ]);
-
-//     $document->update([
-//         'current_version' => $newVersion,
-//     ]);
-
-//     return back()->with('success', 'Revisi berhasil diupload');
-// }
-
-
-public function addVersion(Request $request, Document $document)
-{
-    $request->validate([
-        'file' => 'required|mimes:pdf,doc,docx|max:10240',
-    ]);
-
-    $latest = $document->versions()->count();
-    $newVersionNumber = '1.' . $latest;
-
-    // $path = $request->file('file')->store('documents', 'public');
-
-    $path = $request->file('file')->store('documents', 'private');
-
-
-    $version = DocumentVersion::create([
-        'document_id' => $document->id,
-        'version' => $newVersionNumber,
-        'file_path' => $path,
-        'notes' => $request->notes,
-        'uploaded_by' => auth()->id(),
-    ]);
-
-    // UPDATE CURRENT VERSION KE ID
-    $document->update([
-        'current_version' => $version->id,
-    ]);
-
-    return back()->with('success', 'Revisi berhasil diupload');
-}
-
-
-public function download($versionId)
-{
-    $version = DocumentVersion::findOrFail($versionId);
-
-    $path = storage_path('app/private/' . $version->file_path);
-
-    if (!file_exists($path)) {
-        abort(404, 'File tidak ditemukan');
+        return response()->download($path);
     }
 
-    return response()->download($path);
-}
-
-
-// public function preview($versionId)
-// {
-//     $version = DocumentVersion::findOrFail($versionId);
-
-//     // Hanya preview PDF
-//     if (!str_ends_with($version->file_path, '.pdf')) {
-//         return redirect()
-//             ->route('documents.download', $versionId);
-//     }
-
-//     return response()->file(
-//         storage_path('app/' . $version->file_path),
-//         ['Content-Type' => 'application/pdf']
-//     );
-// }
-
-// public function preview($id)
-// {
-//     $version = DocumentVersion::findOrFail($id);
-
-//     // DEBUG PATH
-//     $fullPath = storage_path('app/private/' . $version->file_path);
-
-//     if (!file_exists($fullPath)) {
-//         dd([
-//             'file_path_db' => $version->file_path,
-//             'expected_path' => $fullPath,
-//             'exists' => file_exists($fullPath),
-//         ]);
-//     }
-
-//     return response()->file($fullPath, [
-//         'Content-Type' => 'application/pdf',
-//         'Content-Disposition' => 'inline',
-//     ]);
-// }
-
-public function preview($id)
-{
-    $version = DocumentVersion::findOrFail($id);
-
-    $fullPath = storage_path('app/private/' . $version->file_path);
-
-    if (!file_exists($fullPath)) {
-        abort(404, 'File tidak ditemukan');
-    }
-
-    return response()->file($fullPath, [
-        'Content-Type' => 'application/pdf',
-        'Content-Disposition' => 'inline',
-    ]);
-}
-
-
-public function destroy(Document $document)
-{
-    // Hapus semua file versi
-    foreach ($document->versions as $version) {
-        if (file_exists(storage_path('app/private/' . $version->file_path))) {
-            unlink(storage_path('app/private/' . $version->file_path));
+    public function destroy(Document $document)
+    {
+        foreach ($document->versions as $version) {
+            $path = storage_path('app/private/' . $version->file_path);
+            if (file_exists($path)) {
+                unlink($path);
+            }
         }
+
+        $document->versions()->delete();
+        $document->delete();
+
+        return redirect()
+            ->route('documents.index')
+            ->with('success', 'Dokumen berhasil dihapus');
     }
-
-    // Hapus data
-    $document->versions()->delete();
-    $document->delete();
-
-    return redirect()
-        ->route('documents.index')
-        ->with('success', 'Dokumen berhasil dihapus');
-}
-
-
-
 }
