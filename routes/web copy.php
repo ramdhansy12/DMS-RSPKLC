@@ -2,75 +2,83 @@
 
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
 
+/*
+|--------------------------------------------------------------------------
+| PUBLIC
+|--------------------------------------------------------------------------
+*/
 Route::get('/', function () {
     return view('welcome');
 });
 
 /*
 |--------------------------------------------------------------------------
-| AUTH & DASHBOARD
+| PUBLIC PREVIEW (Google Viewer)
 |--------------------------------------------------------------------------
 */
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::get(
+    '/documents/version/{version}/public-preview',
+    [DocumentController::class, 'publicPreview']
+)->name('documents.publicPreview');
 
 /*
 |--------------------------------------------------------------------------
-| USER LOGIN (STAFF RS)
+| AUTHENTICATED USERS (ADMIN + STAFF)
 |--------------------------------------------------------------------------
 */
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth'])->group(function () {
 
-    // Profile
+    /*
+    | Dashboard
+    */
+    Route::get('/dashboard', [DashboardController::class, 'index'])
+        ->name('dashboard');
+
+    /*
+    | Profile
+    */
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    // Dokumen (lihat & upload)
+    /*
+    |--------------------------------------------------------------------------
+    | STAFF & ADMIN - VIEW ONLY
+    |--------------------------------------------------------------------------
+    */
     Route::resource('documents', DocumentController::class)
-        ->only(['index','create','store','show','edit']);
+        ->only(['index','show']);
 
-    // Download versi dokumen
     Route::get(
         '/documents/version/{id}/download',
         [DocumentController::class, 'download']
     )->name('documents.download');
 
-    // Revisi dokumen (tambah versi)
-    Route::post(
-        '/documents/{document}/revisi',
-        [DocumentController::class, 'addVersion']
-    )->name('documents.revisi');
-
     Route::get(
-    '/documents/version/{id}/preview',
-    [DocumentController::class, 'preview']
+        '/documents/version/{id}/preview',
+        [DocumentController::class, 'preview']
     )->name('documents.preview');
-
-    Route::get('/documents/{version}/public-preview',
-    [DocumentController::class, 'publicPreview'])
-    ->name('documents.publicPreview');
-
-
 });
 
 
 /*
 |--------------------------------------------------------------------------
-| ADMIN RS
+| ADMIN ONLY
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth','role:admin'])->group(function () {
 
     Route::resource('documents', DocumentController::class)
-        ->only(['edit','update','destroy']);
+        ->only(['create','store','edit','update','destroy']);
 
-    Route::get('/admin', function () {
-        return 'ADMIN AREA LARAVEL 12';
-    });
+    Route::post(
+        '/documents/{document}/revisi',
+        [DocumentController::class, 'addVersion']
+    )->name('documents.revisi');
+
 });
 
 require __DIR__.'/auth.php';

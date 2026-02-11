@@ -23,70 +23,70 @@
     <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
 
     <style>
-        body {
-            overflow-x: hidden;
-            background-color: #f4f6f9;
-        }
+    body {
+        overflow-x: hidden;
+        background-color: #f4f6f9;
+    }
 
+    .sidebar {
+        width: 250px;
+        transition: all 0.3s ease;
+    }
+
+    .sidebar.collapsed {
+        width: 70px;
+    }
+
+    .sidebar.collapsed .text,
+    .sidebar.collapsed .logo-text {
+        display: none;
+    }
+
+    .nav-link {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 14px;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+        color: #495057;
+        font-weight: 500;
+    }
+
+    .nav-link:hover {
+        background: #e9f2ff;
+        color: #0d6efd;
+    }
+
+    .nav-link.active {
+        background: #dbeafe;
+        color: #0d6efd;
+        font-weight: 600;
+        border-left: 4px solid #0d6efd;
+    }
+
+    .icon {
+        width: 20px;
+        text-align: center;
+    }
+
+    .content-area {
+        min-height: 100vh;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
         .sidebar {
-            width: 250px;
-            transition: all 0.3s ease;
+            position: fixed;
+            z-index: 1050;
+            height: 100%;
+            left: -250px;
         }
 
-        .sidebar.collapsed {
-            width: 70px;
+        .sidebar.show {
+            left: 0;
         }
-
-        .sidebar.collapsed .text,
-        .sidebar.collapsed .logo-text {
-            display: none;
-        }
-
-        .nav-link {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 10px 14px;
-            border-radius: 8px;
-            transition: all 0.2s ease;
-            color: #495057;
-            font-weight: 500;
-        }
-
-        .nav-link:hover {
-            background: #e9f2ff;
-            color: #0d6efd;
-        }
-
-        .nav-link.active {
-            background: #dbeafe;
-            color: #0d6efd;
-            font-weight: 600;
-            border-left: 4px solid #0d6efd;
-        }
-
-        .icon {
-            width: 20px;
-            text-align: center;
-        }
-
-        .content-area {
-            min-height: 100vh;
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            .sidebar {
-                position: fixed;
-                z-index: 1050;
-                height: 100%;
-                left: -250px;
-            }
-
-            .sidebar.show {
-                left: 0;
-            }
-        }
+    }
     </style>
 </head>
 
@@ -155,14 +155,13 @@
                 </li>
 
                 {{-- MENU USER (ADMIN ONLY) --}}
-                @if (auth()->user()->role === 'admin')
-                    <li>
-                        <a href="{{ route('users.index') }}"
-                            class="nav-link {{ request()->is('users*') ? 'active' : '' }}">
-                            <span class="icon"><i class="fa fa-users"></i></span>
-                            <span class="text">Manajemen User</span>
-                        </a>
-                    </li>
+                @if(auth()->user()->role === 'admin')
+                <li>
+                    <a href="{{ route('users.index') }}" class="nav-link {{ request()->is('users*') ? 'active' : '' }}">
+                        <span class="icon"><i class="fa fa-users"></i></span>
+                        <span class="text">Manajemen User</span>
+                    </a>
+                </li>
                 @endif
 
                 <li>
@@ -189,19 +188,19 @@
     </form>
 
     <script>
-        const sidebar = document.getElementById('sidebar');
-        const hamburger = document.getElementById('hamburger');
+    const sidebar = document.getElementById('sidebar');
+    const hamburger = document.getElementById('hamburger');
 
-        hamburger.addEventListener('click', () => {
+    hamburger.addEventListener('click', () => {
 
-            // Mobile mode
-            if (window.innerWidth < 768) {
-                sidebar.classList.toggle('show');
-            } else {
-                sidebar.classList.toggle('collapsed');
-            }
+        // Mobile mode
+        if (window.innerWidth < 768) {
+            sidebar.classList.toggle('show');
+        } else {
+            sidebar.classList.toggle('collapsed');
+        }
 
-        });
+    });
     </script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>

@@ -2,37 +2,22 @@
 
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\ProfileController;
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DashboardController;
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\UserController;
 
+/*
+|--------------------------------------------------------------------------
+| PUBLIC
+|--------------------------------------------------------------------------
+*/
 Route::get('/', function () {
     return view('welcome');
 });
 
 /*
 |--------------------------------------------------------------------------
-| AUTH & DASHBOARD
-|--------------------------------------------------------------------------
-*/
-// Route::get('/dashboard', function () {
-//     return redirect()->route('documents.index'); // langsung ke dokumen
-// })->middleware(['auth', 'verified'])->name('dashboard');
-
-// Route::middleware(['auth', 'verified'])->group(function () {
-Route::get('/dashboard', [DocumentController::class, 'dashboard'])
-        ->name('dashboard');
-
-
-
-Route::get('/dashboard', [DashboardController::class, 'index'])
-    ->middleware(['auth'])
-    ->name('dashboard');
-
-
-
-/*
-|--------------------------------------------------------------------------
-| PUBLIC PREVIEW (KHUSUS GOOGLE VIEWER)
+| PUBLIC PREVIEW (Google Viewer)
 |--------------------------------------------------------------------------
 */
 Route::get(
@@ -40,46 +25,72 @@ Route::get(
     [DocumentController::class, 'publicPreview']
 )->name('documents.publicPreview');
 
+
 /*
 |--------------------------------------------------------------------------
-| USER LOGIN (STAFF RS)
+| AUTHENTICATED USERS (ADMIN + STAFF)
 |--------------------------------------------------------------------------
 */
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth'])->group(function () {
 
-    // Profile
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    /*
+    | Dashboard
+    */
+    Route::get('/dashboard', [DashboardController::class, 'index'])
+        ->name('dashboard');
 
-    // Dokumen
+    /*
+    | Profile
+    */
+    Route::prefix('profile')->group(function () {
+        Route::get('/', [ProfileController::class, 'edit'])->name('profile.edit');
+        Route::patch('/', [ProfileController::class, 'update'])->name('profile.update');
+        Route::delete('/', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    });
+
+    /*
+    |--------------------------------------------------------------------------
+    | DOCUMENTS - VIEW ONLY (STAFF + ADMIN)
+    |--------------------------------------------------------------------------
+    */
     Route::resource('documents', DocumentController::class)
-        ->only(['index','create','store','show','edit']);
+        ->only(['index', 'show']);
 
-    Route::get(
-        '/documents/version/{id}/download',
-        [DocumentController::class, 'download']
-    )->name('documents.download');
+    Route::prefix('documents/version')->group(function () {
 
-    Route::get(
-        '/documents/version/{id}/preview',
-        [DocumentController::class, 'preview']
-    )->name('documents.preview');
+        Route::get('{id}/download', [DocumentController::class, 'download'])
+            ->name('documents.download');
 
+        Route::get('{id}/preview', [DocumentController::class, 'preview'])
+            ->name('documents.preview');
+
+    });
+});
+
+
+/*
+|--------------------------------------------------------------------------
+| ADMIN ONLY
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth','role:admin'])->group(function () {
+
+    /*
+    | Full CRUD Dokumen
+    */
+    Route::resource('documents', DocumentController::class)
+        ->only(['create','store','edit','update','destroy']);
+
+    /*
+    | Revisi Dokumen
+    */
     Route::post(
         '/documents/{document}/revisi',
         [DocumentController::class, 'addVersion']
     )->name('documents.revisi');
-});
 
-/*
-|--------------------------------------------------------------------------
-| ADMIN RS
-|--------------------------------------------------------------------------
-*/
-Route::middleware(['auth','role:admin'])->group(function () {
-    Route::resource('documents', DocumentController::class)
-        ->only(['update','destroy']);
+    Route::resource('users', UserController::class);
+
 });
 
 require __DIR__.'/auth.php';
