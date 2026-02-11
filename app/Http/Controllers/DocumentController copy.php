@@ -13,82 +13,79 @@ class DocumentController extends Controller
 
 public function dashboard()
 {
-    $totalDocuments = Document::count();
+        // KPI
+        $totalDocuments = Document::count();
+        $activeDocuments = Document::where('status', 'Aktif')->count();
+        $nonActiveDocuments = Document::where('status', 'NonAktif')->count();
+        $draftDocuments = Document::where('status', 'Draft')->count();
 
-    $totalUnits = Document::distinct('unit')->count('unit');
+        // Dokumen per Unit
+        $documentsPerUnit = Document::select('unit', DB::raw('count(*) as total'))
+            ->groupBy('unit')
+            ->pluck('total', 'unit');
 
-    $totalActive = Document::where('status', 'Aktif')->count();
-    $nonActiveDocuments  = Document::where('status', 'Non Aktif')->count();
+        // Dokumen Per Kategori
+        $documentsPerCategory = Document::select('category', DB::raw('count(*) as total'))
+            ->groupBy('category')
+            ->pluck('total', 'category');
 
-    $documentsByUnit = Document::select('unit', DB::raw('count(*) as total'))
-        ->groupBy('unit')
-        ->orderBy('unit')
-        ->get();
+        // Status Dokumen
+        $documentsByStatus = Document::select('status', DB::raw('count(*) as total'))
+            ->groupBy('status')
+            ->pluck('total', 'status');
 
-    $documentsByStatus = Document::select('status', DB::raw('count(*) as total'))
-        ->groupBy('status')
-        ->get();
+        // Upload per Bulan (12 bulan terakhir)
+        // $monthlyUpload = Document::select(
+        //         DB::raw('MONTH(created_at) as month'),
+        //         DB::raw('count(*) as total')
+        //     )
+        //     ->whereYear('created_at', Carbon::now()->year)
+        //     ->groupBy('month')
+        //     ->pluck('total', 'month');
 
-    return view('dashboard', compact(
-        'totalDocuments',
-        'totalUnits',
-        'totalActive',
-        'nonActiveDocuments',
-        'documentsByUnit',
-        'documentsPerCategory',
-        'documentsByStatus'
+        return view('dashboard', compact(
+            'totalDocuments',
+            'activeDocuments',
+            'nonActiveDocuments',
+            'draftDocuments',
+            'documentsPerUnit',
+            'documentsPerCategory',
+            'documentsByStatus',
+            'monthlyUpload'
     ));
 }
 
-
-// public function index(Request $request)
-// {
-//     $query = Document::with('creator');
-
-//     if ($request->filled('search')) {
-//         $query->where('title', 'like', '%' . $request->search . '%');
-//     }
-
-//     if ($request->filled('unit')) {
-//         $query->where('unit', $request->unit);
-//     }
-
-//     $documents = $query
-//         ->latest()
-//         ->paginate(10)
-//         ->withQueryString();
-
-//     $units = Document::select('unit')
-//         ->distinct()
-//         ->orderBy('unit')
-//         ->pluck('unit');
-
-//     return view('documents.index', compact('documents', 'units'));
-// }
 
 public function index(Request $request)
 {
     $query = Document::with('creator');
 
+    // SEARCH berdasarkan judul dokumen
     if ($request->filled('search')) {
         $query->where('title', 'like', '%' . $request->search . '%');
     }
 
+    // FILTER berdasarkan unit
     if ($request->filled('unit')) {
         $query->where('unit', $request->unit);
     }
 
-    $documents = $query->latest()->get(); // 🔥 get() bukan paginate()
+    $documents = $query->latest()->get();
 
+    // Ambil daftar unit (unik)
     $units = Document::select('unit')
         ->distinct()
         ->orderBy('unit')
         ->pluck('unit');
 
+            // ⏩ PAGINATION
+    $documents = $query
+        ->latest()
+        ->paginate(10)          // jumlah per halaman
+        ->withQueryString();    // jaga parameter search & filte
+
     return view('documents.index', compact('documents', 'units'));
 }
-
-
 
     // public function index()
     // {

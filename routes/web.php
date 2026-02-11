@@ -3,6 +3,7 @@
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\DashboardController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -13,9 +14,21 @@ Route::get('/', function () {
 | AUTH & DASHBOARD
 |--------------------------------------------------------------------------
 */
-Route::get('/dashboard', function () {
-    return redirect()->route('documents.index'); // langsung ke dokumen
-})->middleware(['auth', 'verified'])->name('dashboard');
+// Route::get('/dashboard', function () {
+//     return redirect()->route('documents.index'); // langsung ke dokumen
+// })->middleware(['auth', 'verified'])->name('dashboard');
+
+// Route::middleware(['auth', 'verified'])->group(function () {
+Route::get('/dashboard', [DocumentController::class, 'dashboard'])
+        ->name('dashboard');
+
+
+
+Route::get('/dashboard', [DashboardController::class, 'index'])
+    ->middleware(['auth'])
+    ->name('dashboard');
+
+
 
 /*
 |--------------------------------------------------------------------------

@@ -1,20 +1,22 @@
-<div class="bg-white border-end vh-100 p-3" style="width:250px">
-    <h5 class="text-primary fw-bold mb-4">🏥 DMS RS</h5>
 
-    <ul class="nav flex-column gap-2">
-        <li>
-            <a href="/dashboard" class="nav-link text-dark">📊 Dashboard</a>
-        </li>
+<div id="sidebar">
+    <div class="p-3 fw-bold text-primary">
+        🏥 <span class="menu-text">DMS RS</span>
+    </div>
+
+    <ul class="nav flex-column gap-1 px-2">
         <li>
             <a href="{{ route('documents.index') }}" class="nav-link text-dark">
-                📄 Dokumen & SPO
+                <i class="bi bi-speedometer2"></i>
+                <span class="menu-text"> Dashboard</span>
             </a>
         </li>
+
         <li>
-            <a href="#" class="nav-link text-dark">👨‍⚕️ Unit RS</a>
-        </li>
-        <li>
-            <a href="#" class="nav-link text-dark">⚙️ Pengaturan</a>
+            <a href="{{ route('documents.index') }}" class="nav-link text-dark">
+                <i class="bi bi-file-earmark-text"></i>
+                <span class="menu-text"> Dokumen</span>
+            </a>
         </li>
     </ul>
 </div>

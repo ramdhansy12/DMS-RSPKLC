@@ -1,10 +1,6 @@
-<nav class="navbar bg-light shadow-sm px-3">
-    <button id="btnHamburger" class="btn btn-outline-primary d-md-none">
-        <i class="bi bi-list"></i>
-    </button>
-
-    <button id="btnCollapse" class="btn btn-outline-secondary d-none d-md-inline">
-        <i class="bi bi-layout-sidebar-inset"></i>
+<nav class="navbar navbar-light bg-light border-bottom px-3">
+    <button class="btn btn-outline-primary" id="menu-toggle">
+        ☰
     </button>
 
     <!-- Right menu -->
@@ -16,11 +12,11 @@
         </a>
 
         <ul class="dropdown-menu dropdown-menu-end shadow-sm mt-2">
-            {{-- <li>
-                <a class="dropdown-item" href="{{ route('documents.publicPreview') }}">
+            <li>
+                <a class="dropdown-item" href="/profile">
                     <i class="bi bi-person me-2"></i> Profil
                 </a>
-            </li> --}}
+            </li>
             <li>
                 <hr class="dropdown-divider">
             </li>
@@ -33,17 +29,3 @@
         </ul>
     </div>
 </nav>
-
-
-<!-- Content -->
-<div class="container-fluid mt-4">
-    @yield('content')
-</div>
-
-<!-- Logout Form -->
-<form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
-    @csrf
-</form>
-
-<!-- Bootstrap JS -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
