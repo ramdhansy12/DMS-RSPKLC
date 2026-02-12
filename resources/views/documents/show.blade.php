@@ -2,168 +2,219 @@
 
 @section('title', 'Detail Dokumen')
 
+<style>
+    .version-item {
+        cursor: pointer;
+        transition: .18s ease;
+    }
+
+    .version-item:hover {
+        background: #f1f5f9;
+    }
+
+    .version-item.active {
+        background: #e8f1ff;
+        border-left: 4px solid #0d6efd;
+    }
+
+    .preview-box {
+        height: 650px;
+        background: #f8fafc;
+        position: relative;
+    }
+
+    .preview-loader {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #ffffffc7;
+        backdrop-filter: blur(2px);
+        z-index: 5;
+    }
+
+    .loader {
+        width: 42px;
+        height: 42px;
+        border: 4px solid #e5e7eb;
+        border-top: 4px solid #0d6efd;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+</style>
+
 @section('content')
-    <div class="row">
+    <div class="container-fluid py-4">
+        <div class="row">
 
-        {{-- SEARCH --}}
-        <div class="card mb-3 shadow-sm">
-            <div class="card-body">
-                <input type="text" id="searchVersion" class="form-control" placeholder="🔍 Cari versi dokumen...">
-            </div>
-        </div>
+            {{-- LEFT PANEL --}}
+            <div class="col-lg-4 mb-4">
 
-        <div class="col-md-12">
+                {{-- INFO CARD --}}
+                <div class="card shadow-sm mb-3 border-0">
+                    <div class="card-header fw-bold bg-white">
+                        <i class="fas fa-file-alt me-2"></i>Informasi Dokumen
+                    </div>
 
-            {{-- INFORMASI DOKUMEN --}}
-            <div class="card mb-3 shadow-sm">
-                <div class="card-header">Informasi Dokumen</div>
-                <div class="card-body">
-                    <p><strong>Judul:</strong> {{ $document->title }}</p>
-                    <p><strong>Unit:</strong> {{ $document->unit }}</p>
-                    <p><strong>Status:</strong>
-                        <span class="badge bg-success">{{ $document->status }}</span>
-                    </p>
-                    <p>
-                        <strong>Versi Aktif:</strong>
-                        <span id="infoVersion">
-                            {{ $document->currentVersion->version ?? '-' }}
-                        </span>
-                    </p>
+                    <div class="card-body">
+                        <dl class="row mb-0">
 
-                    {{-- <p><strong>Versi Aktif:</strong>
-                        {{ $document->currentVersion->version ?? '-' }}
-                    </p> --}}
+                            <dt class="col-5">Judul</dt>
+                            <dd class="col-7">{{ $document->title }}</dd>
+
+                            <dt class="col-5">Unit</dt>
+                            <dd class="col-7">{{ $document->unit }}</dd>
+
+                            <dt class="col-5">Status</dt>
+                            <dd class="col-7">
+                                @php
+                                    $class = match (strtolower($document->status)) {
+                                        'aktif' => 'success',
+                                        'draft' => 'warning',
+                                        'nonaktif' => 'secondary',
+                                        default => 'primary',
+                                    };
+                                @endphp
+                                <span class="badge bg-{{ $class }} text-uppercase">
+                                    {{ $document->status }}
+                                </span>
+                            </dd>
+
+                            <dt class="col-5">Versi Aktif</dt>
+                            <dd class="col-7 fw-bold text-primary" id="infoVersion">
+                                {{ $document->currentVersion->version ?? '-' }}
+                            </dd>
+
+                        </dl>
+                    </div>
                 </div>
-            </div>
 
-            {{-- RIWAYAT REVISI --}}
-            <div class="card shadow-sm">
-                <div class="card-header">Riwayat Revisi</div>
-                <div class="card-body p-0">
+                {{-- VERSION LIST --}}
+                <div class="card shadow-sm border-0">
+
+                    <div class="card-header fw-bold bg-white">
+                        <i class="fas fa-history me-2"></i>Riwayat Versi
+                    </div>
+
                     <ul class="list-group list-group-flush">
 
-                        @forelse ($document->versions as $v)
-                            <li class="list-group-item d-flex justify-content-between align-items-center version-item
-                            {{ optional($document->currentVersion)->id === $v->id ? 'bg-light' : '' }}"
-                                data-version="{{ strtolower($v->version) }}">
+                        @foreach ($document->versions as $v)
+                            <li class="list-group-item version-item
+                                {{ optional($document->currentVersion)->id == $v->id ? 'active' : '' }}"
+                                data-url="{{ route('documents.preview', $v->id) }}" data-version="{{ $v->version }}">
 
-                                <div>
-                                    <div class="fw-semibold">
-                                        Versi {{ $v->version ?? '-' }}
+                                <div class="d-flex justify-content-between">
 
-                                        @if (optional($document->currentVersion)->id === $v->id)
-                                            <span class="badge bg-primary ms-2">Aktif</span>
-                                        @endif
+                                    <div>
+                                        <div class="fw-semibold">
+                                            Versi {{ $v->version }}
+                                            @if (optional($document->currentVersion)->id == $v->id)
+                                                <span class="badge bg-success ms-2">Aktif</span>
+                                            @endif
+                                        </div>
+                                        <small class="text-muted">
+                                            {{ $v->created_at->format('d M Y') }}
+                                        </small>
                                     </div>
 
-                                    <div class="text-muted small">
-                                        Upload: {{ $v->created_at->format('d M Y') }}
-                                    </div>
-                                </div>
-
-                                <div class="btn-group">
-                                    {{-- PREVIEW TANPA TAB BARU --}}
-                                    {{-- <a href="{{ route('documents.preview', $v->id) }}"
-                                        class="btn btn-sm btn-outline-primary btn-preview"
-                                        data-url="{{ route('documents.preview', $v->id) }}">
-                                        Preview
-                                    </a> --}}
-                                    <a href="{{ route('documents.preview', $v->id) }}"
-                                        class="btn btn-sm btn-outline-primary btn-preview"
-                                        data-url="{{ route('documents.preview', $v->id) }}"
-                                        data-version="{{ $v->version }}" data-id="{{ $v->id }}">
-                                        Preview
-                                    </a>
-
-
-
-                                    {{-- DOWNLOAD TETAP --}}
                                     <a href="{{ route('documents.download', $v->id) }}"
-                                        class="btn btn-sm btn-outline-secondary">
-                                        Download
+                                        class="btn btn-sm btn-light border">
+                                        <i class="fas fa-download me-1"></i>Download
                                     </a>
+
                                 </div>
                             </li>
-                        @empty
-                            <li class="list-group-item text-center text-muted">
-                                Belum ada versi dokumen
-                            </li>
-                        @endforelse
+                        @endforeach
 
                     </ul>
                 </div>
             </div>
 
-            {{-- PREVIEW IFRAME --}}
-            <div class="card mt-3 shadow-sm">
-                <div class="card-header">
-                    Preview Dokumen
-                </div>
 
-                <div class="card-body p-0" id="preview-container">
-                    @if ($document->currentVersion)
-                        <iframe id="docPreview"
-                            src="{{ route('documents.preview', $document->currentVersion->id) }}?t={{ time() }}"
-                            width="100%" height="650" style="border:none">
-                        </iframe>
-                    @else
-                        <div class="p-3 text-center text-muted">
-                            Belum ada dokumen untuk ditampilkan
+            {{-- RIGHT PANEL PREVIEW --}}
+            <div class="col-lg-8">
+
+                <div class="card shadow-sm border-0">
+
+                    <div class="card-header d-flex justify-content-between bg-white">
+                        <span>
+                            <i class="fas fa-eye me-2"></i>
+                            <strong>Preview Dokumen {{ $document->title }}</strong>
+                        </span>
+
+                        <span class="badge bg-secondary" id="previewTitle">
+                            Versi {{ $document->currentVersion->version ?? '-' }}
+                        </span>
+                    </div>
+
+                    <div class="preview-box">
+
+                        <div class="preview-loader d-none" id="loader">
+                            <div class="loader"></div>
                         </div>
-                    @endif
+
+                        @if ($document->currentVersion)
+                            <iframe id="previewFrame" src="{{ route('documents.preview', $document->currentVersion->id) }}"
+                                width="100%" height="100%" style="border:none">
+                            </iframe>
+                        @else
+                            <div class="d-flex align-items-center justify-content-center h-100 text-muted">
+                                Belum ada file
+                            </div>
+                        @endif
+
+                    </div>
                 </div>
             </div>
 
         </div>
     </div>
 @endsection
+
+
 @push('scripts')
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', () => {
 
-            const iframe = document.getElementById('docPreview');
-            const infoVersion = document.getElementById('infoVersion');
+            const frame = document.getElementById('previewFrame')
+            const loader = document.getElementById('loader')
+            const infoVersion = document.getElementById('infoVersion')
+            const title = document.getElementById('previewTitle')
 
-            document.querySelectorAll('.btn-preview').forEach(btn => {
-                btn.addEventListener('click', function(e) {
-                    e.preventDefault();
+            document.querySelectorAll('.version-item').forEach(item => {
 
-                    if (!iframe) return;
+                item.addEventListener('click', e => {
 
-                    const url = this.dataset.url;
-                    const version = this.dataset.version;
-                    const versionId = this.dataset.id;
+                    if (e.target.closest('a')) return
 
-                    // 1️⃣ GANTI IFRAME
-                    iframe.src = url + '?t=' + Date.now();
+                    let url = item.dataset.url
+                    let version = item.dataset.version
 
-                    // 2️⃣ UPDATE INFO DOKUMEN
-                    if (infoVersion) {
-                        infoVersion.textContent = version;
-                    }
+                    loader.classList.remove('d-none')
 
-                    // 3️⃣ PINDAHKAN BADGE AKTIF
-                    document.querySelectorAll('.list-group-item').forEach(item => {
-                        item.classList.remove('bg-light');
-                        const badge = item.querySelector('.badge.bg-primary');
-                        if (badge) badge.remove();
-                    });
+                    frame.onload = () => loader.classList.add('d-none')
 
-                    const parentItem = this.closest('.list-group-item');
-                    if (parentItem) {
-                        parentItem.classList.add('bg-light');
+                    frame.src = url + "?t=" + Date.now()
 
-                        const title = parentItem.querySelector('.fw-semibold');
-                        if (title) {
-                            const badge = document.createElement('span');
-                            badge.className = 'badge bg-primary ms-2';
-                            badge.textContent = 'Aktif';
-                            title.appendChild(badge);
-                        }
-                    }
-                });
-            });
+                    infoVersion.textContent = version
+                    title.textContent = "Versi " + version
 
-        });
+                    document.querySelectorAll('.version-item')
+                        .forEach(v => v.classList.remove('active'))
+
+                    item.classList.add('active')
+
+                })
+
+            })
+
+        })
     </script>
 @endpush

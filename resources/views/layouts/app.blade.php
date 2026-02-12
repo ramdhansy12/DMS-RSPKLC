@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>@yield('title', 'DMS RS')</title>
+    <title>@yield('title', 'DMS RS. Permata Keluarga Lippo')</title>
 
     <!-- Bootstrap -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -28,9 +28,28 @@
             background-color: #f4f6f9;
         }
 
+        /* Overlay untuk mobile */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1040;
+            display: none;
+        }
+
+        .overlay.show {
+            display: block;
+        }
+
         .sidebar {
             width: 250px;
+            min-height: 100vh;
             transition: all 0.3s ease;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.05);
+            z-index: 1050;
         }
 
         .sidebar.collapsed {
@@ -42,6 +61,15 @@
             display: none;
         }
 
+        .sidebar.collapsed .nav-link {
+            justify-content: center;
+            padding: 10px;
+        }
+
+        .sidebar.collapsed .nav-link .icon {
+            margin: 0;
+        }
+
         .nav-link {
             display: flex;
             align-items: center;
@@ -51,6 +79,7 @@
             transition: all 0.2s ease;
             color: #495057;
             font-weight: 500;
+            white-space: nowrap;
         }
 
         .nav-link:hover {
@@ -65,22 +94,33 @@
             border-left: 4px solid #0d6efd;
         }
 
+        /* PERUBAHAN: Style khusus untuk link logout */
+        .nav-link.text-danger:hover {
+            background: #fff5f5;
+            color: #dc3545;
+        }
+
         .icon {
             width: 20px;
             text-align: center;
+            flex-shrink: 0;
         }
 
         .content-area {
             min-height: 100vh;
         }
 
+        .navbar {
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
         /* Responsive */
         @media (max-width: 768px) {
             .sidebar {
                 position: fixed;
-                z-index: 1050;
                 height: 100%;
                 left: -250px;
+                transition: left 0.3s ease-in-out;
             }
 
             .sidebar.show {
@@ -91,6 +131,8 @@
 </head>
 
 <body>
+    <!-- Overlay untuk mobile -->
+    <div id="overlay" class="overlay"></div>
 
     <!-- TOPBAR -->
     <nav class="navbar navbar-light bg-white border-bottom px-3 shadow-sm">
@@ -100,29 +142,11 @@
 
         <span class="fw-bold ms-3">🏥 Document Management System</span>
 
-        <div class="dropdown ms-auto">
-            <a class="dropdown-toggle text-decoration-none text-dark d-flex align-items-center gap-2" href="#"
-                role="button" data-bs-toggle="dropdown">
+        <!-- PERUBAHAN: Hanya menampilkan nama user, tanpa dropdown -->
+        <div class="ms-auto">
+            <span class="text-muted">Hallo,<span> {{ auth()->user()->name }}</span>
                 <i class="fa-solid fa-user-circle"></i>
-                <span>Hello, {{ auth()->user()->name }}</span>
-            </a>
-
-            <ul class="dropdown-menu dropdown-menu-end shadow-sm">
-                <li>
-                    <a class="dropdown-item" href="{{ route('profile.edit') }}">
-                        <i class="fa fa-user me-2"></i> Profile
-                    </a>
-                </li>
-                <li>
-                    <hr class="dropdown-divider">
-                </li>
-                <li>
-                    <a class="dropdown-item text-danger" href="#"
-                        onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                        <i class="fa fa-sign-out-alt me-2"></i> Logout
-                    </a>
-                </li>
-            </ul>
+            </span>
         </div>
     </nav>
 
@@ -133,7 +157,7 @@
 
             <h5 class="text-primary fw-bold mb-4 text-center">
                 <i class="fa-solid fa-hospital"></i>
-                <span class="logo-text"> DMS RS</span>
+                <span class="logo-text"> DMS RS. Permata Keluarga Lippo</span>
             </h5>
 
             <ul class="nav flex-column gap-2">
@@ -165,11 +189,12 @@
                     </li>
                 @endif
 
+                <!-- PERUBAHAN: Tombol logout dipindahkan kembali ke sidebar -->
                 <li>
-                    <a href="{{ route('profile.edit') }}"
-                        class="nav-link {{ request()->is('profile*') ? 'active' : '' }}">
-                        <span class="icon"><i class="fa fa-id-card"></i></span>
-                        <span class="text">Profile</span>
+                    <a class="nav-link text-danger" href="#"
+                        onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                        <span class="icon"><i class="fa fa-sign-out-alt"></i></span>
+                        <span class="text">Logout</span>
                     </a>
                 </li>
 
@@ -191,23 +216,40 @@
     <script>
         const sidebar = document.getElementById('sidebar');
         const hamburger = document.getElementById('hamburger');
+        const overlay = document.getElementById('overlay');
 
-        hamburger.addEventListener('click', () => {
-
+        function toggleSidebar() {
             // Mobile mode
             if (window.innerWidth < 768) {
                 sidebar.classList.toggle('show');
+                overlay.classList.toggle('show');
             } else {
                 sidebar.classList.toggle('collapsed');
             }
+        }
 
+        hamburger.addEventListener('click', toggleSidebar);
+
+        // Menutup sidebar saat overlay diklik (mobile)
+        overlay.addEventListener('click', () => {
+            sidebar.classList.remove('show');
+            overlay.classList.remove('show');
+        });
+
+        // Menangani perubahan ukuran jendela
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 768) {
+                sidebar.classList.remove('show');
+                overlay.classList.remove('show');
+            }
         });
     </script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
-    @include('components.footer')
 
+    @stack('scripts')
 </body>
+@include('components.footer')
 
 </html>

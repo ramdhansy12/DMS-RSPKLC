@@ -11,6 +11,13 @@ use Illuminate\Support\Facades\DB;
 class DocumentController extends Controller
 {
 
+// public function __construct()
+// {
+//     $this->middleware('role:admin')->only([
+//         'create','store','edit','update','destroy'
+//     ]);
+// }
+
 public function dashboard()
 {
     $totalDocuments = Document::count();

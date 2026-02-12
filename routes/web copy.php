@@ -4,6 +4,8 @@ use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\ActivityLogController;
 
 /*
 |--------------------------------------------------------------------------
@@ -24,6 +26,7 @@ Route::get(
     [DocumentController::class, 'publicPreview']
 )->name('documents.publicPreview');
 
+
 /*
 |--------------------------------------------------------------------------
 | AUTHENTICATED USERS (ADMIN + STAFF)
@@ -40,27 +43,29 @@ Route::middleware(['auth'])->group(function () {
     /*
     | Profile
     */
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::prefix('profile')->group(function () {
+        Route::get('/', [ProfileController::class, 'edit'])->name('profile.edit');
+        Route::patch('/', [ProfileController::class, 'update'])->name('profile.update');
+        Route::delete('/', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    });
 
     /*
     |--------------------------------------------------------------------------
-    | STAFF & ADMIN - VIEW ONLY
+    | DOCUMENTS - VIEW ONLY (STAFF + ADMIN)
     |--------------------------------------------------------------------------
     */
     Route::resource('documents', DocumentController::class)
-        ->only(['index','show']);
+        ->only(['index', 'show']);
 
-    Route::get(
-        '/documents/version/{id}/download',
-        [DocumentController::class, 'download']
-    )->name('documents.download');
+    Route::prefix('documents/version')->group(function () {
 
-    Route::get(
-        '/documents/version/{id}/preview',
-        [DocumentController::class, 'preview']
-    )->name('documents.preview');
+        Route::get('{id}/download', [DocumentController::class, 'download'])
+            ->name('documents.download');
+
+        Route::get('{id}/preview', [DocumentController::class, 'preview'])
+            ->name('documents.preview');
+
+    });
 });
 
 
@@ -71,13 +76,23 @@ Route::middleware(['auth'])->group(function () {
 */
 Route::middleware(['auth','role:admin'])->group(function () {
 
+    Route::get('/activity-logs', [ActivityLogController::class, 'index'])
+        ->name('activity.index');
+    /*
+    | Full CRUD Dokumen
+    */
     Route::resource('documents', DocumentController::class)
         ->only(['create','store','edit','update','destroy']);
 
+    /*
+    | Revisi Dokumen
+    */
     Route::post(
         '/documents/{document}/revisi',
         [DocumentController::class, 'addVersion']
     )->name('documents.revisi');
+
+    Route::resource('users', UserController::class);
 
 });
 

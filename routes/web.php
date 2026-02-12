@@ -1,70 +1,80 @@
 <?php
 
-use App\Http\Controllers\DocumentController;
-use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\UserController;
+use App\Http\Controllers\{
+    DocumentController,
+    ProfileController,
+    DashboardController,
+    UserController,
+    ActivityLogController
+};
 
 /*
 |--------------------------------------------------------------------------
 | PUBLIC
 |--------------------------------------------------------------------------
 */
-Route::get('/', function () {
-    return view('welcome');
-});
+
+Route::get('/', fn() => view('welcome'));
 
 /*
 |--------------------------------------------------------------------------
-| PUBLIC PREVIEW (Google Viewer)
+| PUBLIC PREVIEW
 |--------------------------------------------------------------------------
 */
+
 Route::get(
     '/documents/version/{version}/public-preview',
-    [DocumentController::class, 'publicPreview']
+    [DocumentController::class,'publicPreview']
 )->name('documents.publicPreview');
 
 
 /*
 |--------------------------------------------------------------------------
-| AUTHENTICATED USERS (ADMIN + STAFF)
+| AUTHENTICATED USERS
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth'])->group(function () {
+
+Route::middleware('auth')->group(function () {
 
     /*
     | Dashboard
     */
-    Route::get('/dashboard', [DashboardController::class, 'index'])
+    Route::get('/dashboard',[DashboardController::class,'index'])
         ->name('dashboard');
+
 
     /*
     | Profile
     */
     Route::prefix('profile')->group(function () {
-        Route::get('/', [ProfileController::class, 'edit'])->name('profile.edit');
-        Route::patch('/', [ProfileController::class, 'update'])->name('profile.update');
-        Route::delete('/', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+        Route::get('/',[ProfileController::class,'edit'])->name('profile.edit');
+        Route::patch('/',[ProfileController::class,'update'])->name('profile.update');
+        Route::delete('/',[ProfileController::class,'destroy'])->name('profile.destroy');
+
     });
 
-    /*
-    |--------------------------------------------------------------------------
-    | DOCUMENTS - VIEW ONLY (STAFF + ADMIN)
-    |--------------------------------------------------------------------------
-    */
-    Route::resource('documents', DocumentController::class)
-        ->only(['index', 'show']);
 
+    /*
+    | Documents (ALL ROUTES — permission handled in controller)
+    */
+    Route::resource('documents', DocumentController::class);
+
+
+    /*
+    | File Actions
+    */
     Route::prefix('documents/version')->group(function () {
 
-        Route::get('{id}/download', [DocumentController::class, 'download'])
+        Route::get('{id}/download',[DocumentController::class,'download'])
             ->name('documents.download');
 
-        Route::get('{id}/preview', [DocumentController::class, 'preview'])
+        Route::get('{id}/preview',[DocumentController::class,'preview'])
             ->name('documents.preview');
 
     });
+
 });
 
 
@@ -73,24 +83,15 @@ Route::middleware(['auth'])->group(function () {
 | ADMIN ONLY
 |--------------------------------------------------------------------------
 */
+
 Route::middleware(['auth','role:admin'])->group(function () {
 
-    /*
-    | Full CRUD Dokumen
-    */
-    Route::resource('documents', DocumentController::class)
-        ->only(['create','store','edit','update','destroy']);
+    Route::get('/activity-logs',[ActivityLogController::class,'index'])
+        ->name('activity.index');
 
-    /*
-    | Revisi Dokumen
-    */
-    Route::post(
-        '/documents/{document}/revisi',
-        [DocumentController::class, 'addVersion']
-    )->name('documents.revisi');
-
-    Route::resource('users', UserController::class);
+    Route::resource('users',UserController::class);
 
 });
+
 
 require __DIR__.'/auth.php';
