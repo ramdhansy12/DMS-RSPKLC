@@ -133,7 +133,7 @@
 
                             <!-- Tombol Aksi -->
                             <div class="d-flex justify-content-end gap-2">
-                                <a href="{{ route('documents.show', $document->id) }}" class="btn btn-secondary">
+                                <a href="{{ route('documents.index', $document->id) }}" class="btn btn-secondary">
                                     <i class="fas fa-times"></i> Batal
                                 </a>
                                 <button type="submit" class="btn btn-primary">

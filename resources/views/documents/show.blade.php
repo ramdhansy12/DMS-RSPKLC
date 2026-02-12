@@ -52,6 +52,9 @@
 
 @section('content')
     <div class="container-fluid py-4">
+        <button class="btn btn-sm btn-outline-primary mb-3" onclick="window.history.back()">
+            <i class="fas fa-arrow-left me-2"></i>Kembali
+        </button>
         <div class="row">
 
             {{-- LEFT PANEL --}}
@@ -103,7 +106,7 @@
                         <i class="fas fa-history me-2"></i>Riwayat Versi
                     </div>
 
-                    <ul class="list-group list-group-flush">
+                    <ul class="list-group line-highlight">
 
                         @foreach ($document->versions as $v)
                             <li class="list-group-item version-item
@@ -124,9 +127,9 @@
                                         </small>
                                     </div>
 
-                                    <a href="{{ route('documents.download', $v->id) }}"
-                                        class="btn btn-sm btn-light border">
-                                        <i class="fas fa-download me-1"></i>Download
+                                    <a href="{{ route('documents.download', $v->id) }}" class="btn btn-sm btn-outline-dark"
+                                        title="Download Versi {{ $v->version }}">
+                                        <i class="fas fa-download" style="-ms-overflow-style: auto"></i>
                                     </a>
 
                                 </div>
