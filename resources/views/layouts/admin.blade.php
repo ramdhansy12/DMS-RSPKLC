@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>@yield('title', 'Document Management System')</title>
+    <title>@yield('title', 'DMS')</title>
 
     <!-- Bootstrap -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -155,7 +155,7 @@
         <!-- SIDEBAR -->
         <div id="sidebar" class="sidebar bg-white border-end p-3">
 
-            <h5 class="text-primary fw-bold mb-4 text-center">
+            <h5 class="text-success fw-bold mb-4 text-center">
                 <i class="fa-solid fa-hospital"></i>
                 <span class="logo-text"> DMS RS. Permata Keluarga Lippo</span>
             </h5>
@@ -197,6 +197,17 @@
                         <span class="text">Logout</span>
                     </a>
                 </li>
+
+                {{-- @if (auth()->user()->role === 'admin')
+                    <li>
+                        <a href="{{ route('activity.index') }}"
+                            class="nav-link {{ request()->is('activity-logs*') ? 'active' : '' }}">
+                            <span class="icon">📜</span>
+                            <span class="text">Activity Log</span>
+                        </a>
+                    </li>
+                @endif --}}
+
 
             </ul>
         </div>
@@ -247,9 +258,9 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
+    @include('components.footer')
 
     @stack('scripts')
 </body>
-@include('components.footer')
 
 </html>

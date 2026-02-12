@@ -1,28 +1,96 @@
 <?php
 
-use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\{
+    DocumentController,
+    ProfileController,
+    DashboardController,
+    UserController,
+    ActivityLogController
+};
 
-Route::get('/', function () {
-    return view('welcome');
-});
+/*
+|--------------------------------------------------------------------------
+| PUBLIC
+|--------------------------------------------------------------------------
+*/
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/', fn() => view('welcome'));
+
+/*
+|--------------------------------------------------------------------------
+| PUBLIC PREVIEW
+|--------------------------------------------------------------------------
+*/
+
+Route::get(
+    '/documents/version/{version}/public-preview',
+    [DocumentController::class,'publicPreview']
+)->name('documents.publicPreview');
+
+
+/*
+|--------------------------------------------------------------------------
+| AUTHENTICATED USERS
+|--------------------------------------------------------------------------
+*/
 
 Route::middleware('auth')->group(function () {
 
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    /*
+    | Dashboard
+    */
+    Route::get('/dashboard',[DashboardController::class,'index'])
+        ->name('dashboard');
+
+
+    /*
+    | Profile
+    */
+    Route::prefix('profile')->group(function () {
+
+        Route::get('/',[ProfileController::class,'edit'])->name('profile.edit');
+        Route::patch('/',[ProfileController::class,'update'])->name('profile.update');
+        Route::delete('/',[ProfileController::class,'destroy'])->name('profile.destroy');
+
+    });
+
+
+    /*
+    | Documents (ALL ROUTES — permission handled in controller)
+    */
+    Route::resource('documents', DocumentController::class);
+
+
+    /*
+    | File Actions
+    */
+    Route::prefix('documents/version')->group(function () {
+
+        Route::get('{id}/download',[DocumentController::class,'download'])
+            ->name('documents.download');
+
+        Route::get('{id}/preview',[DocumentController::class,'preview'])
+            ->name('documents.preview');
+
+    });
 
 });
 
-Route::middleware(['auth', 'role:admin'])->group(function () {
-    Route::get('/admin', function () {
-        return 'ADMIN AREA LARAVEL 12';
-    });
+
+/*
+|--------------------------------------------------------------------------
+| ADMIN ONLY
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware(['auth','role:admin'])->group(function () {
+
+    Route::get('/activity-logs',[ActivityLogController::class,'index'])
+        ->name('activity.index');
+
+    Route::resource('users',UserController::class);
+
 });
 
 
